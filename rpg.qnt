@@ -72,7 +72,7 @@ module rpg {
         }
     }
 
-     pure def aumentar_hp(criaturas: List[Criatura]): List[Criatura] =
+    pure def aumentar_hp(criaturas: List[Criatura]): List[Criatura] =
         criaturas.foldl([], (acc, criatura) =>
             if (criatura.classe != Inimigo and criatura.hp > 0){
                 val hp_ajustado = if(criatura.hp > 10) 20 else criatura.hp + 10
@@ -91,6 +91,29 @@ module rpg {
             not(personagem.paralisia),
             criaturas' = criaturas.replaceAt(criatura, { ...personagem, efeito: Some(Canto) }),
             info_turno' = Some({ jogador: personagem, vitima: None, acao_tomada: "Canto bardo", dano: None })
+        }
+    }
+
+    action lanca_de_sangue(agressor: Criatura): bool = {
+        nondet pos_vitima = criaturas.indices().filter(x => criaturas[x].classe == Inimigo).oneOf()
+
+        val vitima = criaturas[pos_vitima]
+
+        val bardo = criaturas.select(x => x.classe == Bardo).head()
+
+        val dano = match bardo.efeito {
+            | Some(e) => 20 * 3
+            | None => 20
+        }
+
+         nondet pos_bardo = criaturas.indices().filter(i => criaturas[i].classe == Bardo).oneOf()
+
+        all {
+            vitima.hp > 0,
+            not(agressor.paralisia),
+            agressor != vitima,
+            criaturas' = criaturas.replaceAt(pos_vitima, aplicar_dano(vitima, dano)).replaceAt(pos_bardo, { ...criaturas[pos_bardo], efeito: None }).replaceAt(criatura, { ...agressor, hp: agressor.hp - 10 }),
+            info_turno' = Some({ jogador: agressor, vitima: Some(vitima), acao_tomada: "lanca de sangue", dano: Some(dano) })
         }
     }
 
@@ -152,6 +175,7 @@ module rpg {
                 remover_paralisia(jogador, possivel_vitima),
                 jogador.cura_sacerdote(),
                 jogador.canto_bardo(),
+                jogador.lanca_de_sangue(),
                 jogador.ataque(),
             },
             criatura' = if (criatura + 1 == criaturas.length()) 0 else criatura + 1,
