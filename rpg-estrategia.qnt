@@ -61,6 +61,9 @@ module rpg {
     pure def existe_personagens_com_pouco_hp(criaturas: List[Criatura]): bool =
         criaturas.indices().exists(x => criaturas[x].classe != Inimigo and criaturas[x].hp <= 10)
 
+    pure def existe_inimigo_com_ritual_iniciado(criaturas: List[Criatura]): bool =
+        criaturas.indices().exists(x => criaturas[x].classe == Inimigo and criaturas[x].ritual != None)
+
     action paralisar_personagem(inimigo: Criatura, pos_personagem: int): bool = {
         val personagem = criaturas[pos_personagem]
         all {
@@ -147,7 +150,7 @@ module rpg {
             vitima.hp > 0,
             not(agressor.paralisia),
             agressor != vitima,
-            criaturas' = criaturas.replaceAt(pos_vitima, aplicar_dano(vitima, dano)).replaceAt(pos_bardo, { ...criaturas[pos_bardo], efeito: None }),
+            criaturas' = criaturas.replaceAt(pos_bardo, { ...criaturas[pos_bardo], efeito: None }).replaceAt(pos_vitima, aplicar_dano(vitima, dano)),
             info_turno' = Some({ jogador: agressor, vitima: Some(vitima), acao_tomada: "ataque", dano: Some(dano) })
         }
     }
@@ -181,6 +184,7 @@ module rpg {
         nondet ini_bardo = dado.oneOf()
         nondet ini_necromante = dado.oneOf()
         nondet ini_inimigo = dado.oneOf()
+        nondet ini_inimigo_2 = dado.oneOf()
 
         all{
                 criaturas' = ordena_criaturas(
@@ -188,7 +192,8 @@ module rpg {
                     { hp: 20, classe: Sacerdote, paralisia: false, efeito: None, iniciativa: ini_sacerdote, ritual: None },
                     { hp: 20, classe: Bardo, paralisia: false, efeito: None, iniciativa: ini_bardo, ritual: None},
                     { hp: 20, classe: Necromante, paralisia: false, efeito: None, iniciativa: ini_necromante, ritual: None},
-                    { hp: 70, classe: Inimigo, paralisia: false, efeito: None, iniciativa: ini_inimigo, ritual: None}
+                    { hp: 70, classe: Inimigo, paralisia: false, efeito: None, iniciativa: ini_inimigo, ritual: None},
+                    { hp: 70, classe: Inimigo, paralisia: false, efeito: None, iniciativa: ini_inimigo_2, ritual: None}
                 ]),
 
             criatura' = 0,
@@ -209,8 +214,8 @@ module rpg {
 
             if(jogador.classe == Inimigo)
             {
-                if(turno == 1) jogador.iniciar_ritual() 
-                else if (turno == 4) jogador.finalizar_ritual() 
+                if(turno == 1 and not(existe_inimigo_com_ritual_iniciado(criaturas))) jogador.iniciar_ritual() 
+                else if (turno == 4 and jogador.ritual != None) jogador.finalizar_ritual() 
                 else 
                 { 
                     any {
@@ -231,7 +236,7 @@ module rpg {
         }
     }
 
-    val monstro_nao_morre = criaturas.indices().filter(i => criaturas[i].classe == Inimigo).forall(i => criaturas[i].hp > 0)
+    val inimigo_nao_morre = criaturas.indices().filter(i => criaturas[i].classe == Inimigo).forall(i => criaturas[i].hp > 0)
     val personagens_nao_morrem = criaturas.indices().filter(i => criaturas[i].classe != Inimigo).forall(x => criaturas[x].hp > 0)
 
 }
