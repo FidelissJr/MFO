@@ -206,11 +206,18 @@ module rpg {
 
             if(jogador.classe == Inimigo)
             {
-                if(turno == 1) jogador.iniciar_ritual() else if (turno == 4) jogador.finalizar_ritual() else jogador.ataque()
+                if(turno == 1) jogador.iniciar_ritual() 
+                else if (turno == 4) jogador.finalizar_ritual() 
+                else 
+                { 
+                    any {
+                        jogador.ataque(), 
+                        paralisar_personagem(jogador, possivel_vitima)                     
+                    }
+                }
             }
             else{
                 any {
-                    paralisar_personagem(jogador, possivel_vitima),
                     remover_paralisia(jogador, possivel_vitima),
                     jogador.cura_sacerdote(),
                     jogador.canto_bardo(),
