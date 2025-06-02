@@ -187,7 +187,7 @@ module rpg {
                     { hp: 20, classe: Sacerdote, paralisia: false, efeito: None, iniciativa: ini_sacerdote, ritual: None },
                     { hp: 20, classe: Bardo, paralisia: false, efeito: None, iniciativa: ini_bardo, ritual: None},
                     { hp: 20, classe: Necromante, paralisia: false, efeito: None, iniciativa: ini_necromante, ritual: None},
-                    { hp: 90, classe: Inimigo, paralisia: false, efeito: None, iniciativa: ini_inimigo, ritual: None}
+                    { hp: 70, classe: Inimigo, paralisia: false, efeito: None, iniciativa: ini_inimigo, ritual: None}
                 ]),
 
             criatura' = 0,
