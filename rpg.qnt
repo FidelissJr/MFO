@@ -12,7 +12,8 @@ module rpg {
         classe: TipoCriatura,
         paralisia: bool,
         efeito: Option[Efeito],
-        iniciativa: int
+        iniciativa: int,
+        ritual: Option[str]
     }
 
     var criaturas: List[Criatura]
@@ -76,7 +77,17 @@ module rpg {
         criaturas.foldl([], (acc, criatura) =>
             if (criatura.classe != Inimigo and criatura.hp > 0){
                 val hp_ajustado = if(criatura.hp > 10) 20 else criatura.hp + 10
+                acc.append({ ...criatura, hp: hp_ajustado })
+            }
+            else {
                 acc.append(criatura)
+            }
+        )
+
+    pure def matar_todos_personagens(criaturas: List[Criatura]): List[Criatura] =
+        criaturas.foldl([], (acc, criatura) =>
+            if (criatura.classe != Inimigo and criatura.hp > 0){
+                acc.append({ ...criatura, hp: 0 })
             }
             else {
                 acc.append(criatura)
@@ -140,6 +151,28 @@ module rpg {
         }
     }
 
+    action iniciar_ritual(inimigo: Criatura): bool = {
+        all {
+            inimigo.hp > 0,
+            inimigo.classe == Inimigo,
+            inimigo.ritual == None,
+            not(inimigo.paralisia),
+            criaturas' = criaturas.replaceAt(criatura, { ...inimigo, ritual: Some("Ritual iniciado") }),
+            info_turno' = Some({ jogador: inimigo, vitima: None, acao_tomada: "iniciar_ritual", dano: None })
+        }
+    }
+
+    action finalizar_ritual(inimigo: Criatura): bool = {
+        all {
+            inimigo.hp > 0,
+            inimigo.classe == Inimigo,
+            not(inimigo.ritual == None),
+            not(inimigo.paralisia),
+            criaturas' = criaturas.replaceAt(criatura, { ...inimigo, ritual: Some("Finalizar ritual") }).matar_todos_personagens(),
+            info_turno' = Some({ jogador: inimigo, vitima: None, acao_tomada: "finalizar_ritual", dano: None })
+        }
+    }
+
     
     action init = {
         val dado = 1.to(20)
@@ -151,10 +184,10 @@ module rpg {
         all{
                 criaturas' = ordena_criaturas(
                 [
-                    { hp: 20, classe: Sacerdote, paralisia: false, efeito: None, iniciativa: ini_sacerdote },
-                    { hp: 20, classe: Bardo, paralisia: false, efeito: None, iniciativa: ini_bardo},
-                    { hp: 20, classe: Necromante, paralisia: false, efeito: None, iniciativa: ini_necromante},
-                    { hp: 90, classe: Inimigo, paralisia: false, efeito: None, iniciativa: ini_inimigo}
+                    { hp: 20, classe: Sacerdote, paralisia: false, efeito: None, iniciativa: ini_sacerdote, ritual: None },
+                    { hp: 20, classe: Bardo, paralisia: false, efeito: None, iniciativa: ini_bardo, ritual: None},
+                    { hp: 20, classe: Necromante, paralisia: false, efeito: None, iniciativa: ini_necromante, ritual: None},
+                    { hp: 90, classe: Inimigo, paralisia: false, efeito: None, iniciativa: ini_inimigo, ritual: None}
                 ]),
 
             criatura' = 0,
@@ -170,20 +203,27 @@ module rpg {
         all {
             jogador.hp > 0,
             not(jogador.paralisia),
-            any {
-                paralisar_personagem(jogador, possivel_vitima),
-                remover_paralisia(jogador, possivel_vitima),
-                jogador.cura_sacerdote(),
-                jogador.canto_bardo(),
-                jogador.lanca_de_sangue(),
-                jogador.ataque(),
+
+            if(jogador.classe == Inimigo)
+            {
+                if(turno == 1) jogador.iniciar_ritual() else if (turno == 4) jogador.finalizar_ritual() else jogador.ataque()
+            }
+            else{
+                any {
+                    paralisar_personagem(jogador, possivel_vitima),
+                    remover_paralisia(jogador, possivel_vitima),
+                    jogador.cura_sacerdote(),
+                    jogador.canto_bardo(),
+                    jogador.lanca_de_sangue(),
+                    jogador.ataque(),
+                }
             },
             criatura' = if (criatura + 1 == criaturas.length()) 0 else criatura + 1,
             turno' = if (criatura + 1 == criaturas.length()) turno + 1 else turno,
         }
     }
 
-    val monstro_nao_morre = criaturas.indices().filter(i => criaturas[i].classe == Inimigo).forall(i => criaturas[i].hp > 0)
+    val inimigo_nao_morre = criaturas.indices().filter(i => criaturas[i].classe == Inimigo).forall(i => criaturas[i].hp > 0)
     val personagens_nao_morrem = criaturas.indices().filter(i => criaturas[i].classe != Inimigo).forall(x => criaturas[x].hp > 0)
 
 }
