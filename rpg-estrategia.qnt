@@ -130,12 +130,19 @@ module rpg {
         }
     }
 
+    action pular_turno(c: Criatura): bool = {
+        all {
+            criaturas' = criaturas.replaceAt(criatura, { ...c, efeito: None }),
+            info_turno' = Some({ jogador: c, vitima: None, acao_tomada: "pular_turno", dano: None })
+        }
+    }
+
     action ataque(agressor: Criatura): bool = {
         nondet pos_vitima = criaturas.indices().filter(x => x != criatura and if (agressor.classe == Inimigo) criaturas[x].classe != Inimigo else criaturas[x].classe == Inimigo).oneOf()
 
         val vitima = criaturas[pos_vitima]
 
-        val bardo = criaturas.select(x => x.classe == Bardo).head()
+        val bardo = criaturas.select(x => x.classe == Bardo).head()      
 
         val dano = match bardo.efeito {
             | Some(e) => 10 * 3
@@ -182,7 +189,7 @@ module rpg {
         nondet ini_bardo = dado.oneOf()
         nondet ini_necromante = dado.oneOf()
         nondet ini_inimigo = dado.oneOf()
-        nondet ini_inimigo_2 = dado.oneOf()
+        // nondet ini_inimigo_2 = dado.oneOf()
 
         all{
                 criaturas' = ordena_criaturas(
@@ -191,7 +198,7 @@ module rpg {
                     { hp: 20, classe: Bardo, paralisia: false, efeito: None, iniciativa: ini_bardo, ritual: None},
                     { hp: 20, classe: Necromante, paralisia: false, efeito: None, iniciativa: ini_necromante, ritual: None},
                     { hp: 70, classe: Inimigo, paralisia: false, efeito: None, iniciativa: ini_inimigo, ritual: None},
-                    { hp: 70, classe: Inimigo, paralisia: false, efeito: None, iniciativa: ini_inimigo_2, ritual: None}
+                    // { hp: 70, classe: Inimigo, paralisia: false, efeito: None, iniciativa: ini_inimigo_2, ritual: None}
                 ]),
 
             criatura' = 0,
@@ -208,7 +215,6 @@ module rpg {
         
         all {
                 jogador.hp > 0,
-                not(jogador.paralisia),
 
                 if(jogador.classe == Inimigo)
                 {
@@ -222,7 +228,7 @@ module rpg {
                         }
                     }
                 }
-
+                else if (jogador.paralisia) jogador.pular_turno()
                 else if (criaturas.select(x => x.paralisia).length() > 0) remover_paralisia(jogador, possivel_vitima)
                 else if (jogador.classe == Sacerdote and existe_personagens_com_pouco_hp(criaturas)) jogador.cura_sacerdote()
                 else if (jogador.classe == Bardo and criaturas[proximo].classe == Necromante) jogador.canto_bardo()
