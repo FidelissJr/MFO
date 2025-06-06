@@ -62,6 +62,12 @@ module rpg {
     pure def existe_inimigo_com_ritual_iniciado(criaturas: List[Criatura]): bool =
         criaturas.indices().exists(x => criaturas[x].classe == Inimigo and criaturas[x].ritual != None)
 
+    pure def sacerdote_joga_antes_de_inimigo(criaturas: List[Criatura]): bool =
+        criaturas.indices().exists(x => criaturas[x].classe == Sacerdote and criaturas[x].iniciativa > criaturas.select(c => c.classe == Inimigo).head().iniciativa)
+
+    pure def necromante_joga_antes_de_inimigo(criaturas: List[Criatura]): bool =
+        criaturas.indices().exists(x => criaturas[x].classe == Necromante and criaturas[x].iniciativa > criaturas.select(c => c.classe == Inimigo).head().iniciativa)
+
     action paralisar_personagem(inimigo: Criatura, pos_personagem: int): bool = {
         val personagem = criaturas[pos_personagem]
         all {
@@ -197,7 +203,7 @@ module rpg {
                     { hp: 20, classe: Sacerdote, paralisia: false, efeito: None, iniciativa: ini_sacerdote, ritual: None },
                     { hp: 20, classe: Bardo, paralisia: false, efeito: None, iniciativa: ini_bardo, ritual: None},
                     { hp: 20, classe: Necromante, paralisia: false, efeito: None, iniciativa: ini_necromante, ritual: None},
-                    { hp: 70, classe: Inimigo, paralisia: false, efeito: None, iniciativa: ini_inimigo, ritual: None},
+                    { hp: 60, classe: Inimigo, paralisia: false, efeito: None, iniciativa: ini_inimigo, ritual: None},
                     // { hp: 70, classe: Inimigo, paralisia: false, efeito: None, iniciativa: ini_inimigo_2, ritual: None}
                 ]),
 
@@ -229,10 +235,11 @@ module rpg {
                     }
                 }
                 else if (jogador.paralisia) jogador.pular_turno()
+                else if (turno >= 3) jogador.ataque()
                 else if (criaturas.select(x => x.paralisia).length() > 0) remover_paralisia(jogador, possivel_vitima)
                 else if (jogador.classe == Sacerdote and existe_personagens_com_pouco_hp(criaturas)) jogador.cura_sacerdote()
-                else if (jogador.classe == Bardo and criaturas[proximo].classe == Necromante) jogador.canto_bardo()
-                else if (jogador.classe == Necromante and jogador.hp > 10 and criaturas[proximo].classe == Sacerdote) jogador.lanca_de_sangue()
+                else if (jogador.classe == Bardo and criaturas[proximo].classe != Inimigo and not(existe_personagens_com_pouco_hp(criaturas))) jogador.canto_bardo()
+                else if (jogador.classe == Necromante and jogador.hp > 10 and sacerdote_joga_antes_de_inimigo(criaturas) and necromante_joga_antes_de_inimigo(criaturas)) jogador.lanca_de_sangue()
                 else jogador.ataque(),
 
                 criatura' = if (criatura + 1 == criaturas.length()) 0 else criatura + 1,
