@@ -14,6 +14,7 @@ struct BankState {
 };
 
 string deposit(BankState &bank_state, string depositor, int amount) {
+   if (amount <= 0) return "Amount should be greater than zero";
   bank_state.balances[depositor] += amount;
   return "";
 }
