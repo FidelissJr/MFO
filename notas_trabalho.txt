@@ -1,0 +1,19 @@
+Bom dia prof,
+
+retiramos o not(jogador.paralisia) do step - all, e realmente, a estratégia falhou.
+
+Alteramos a estratégia com as seguintes funcionalidades a mais
+	a partir do 3 turno, todos os personagens atacam
+	o bardo so vai cantar caso 
+		- todos os inimigos estejam com 20 de vida
+		- o inimigo nao for o proximo a jogar
+	a necromante so vai utilizar a lança caso
+		- possua mais de 10 de vida
+		- E o sacerdote jogar antes do monstro
+	o sacerdote vai curar caso 
+		- exista algum inimigo com vida igual a <= 10
+		
+Com isso, a estratégia passou a funcionar com o inimigo com 60 de hp.
+
+Link do github - https://github.com/FidelissJr/MFO
+		
