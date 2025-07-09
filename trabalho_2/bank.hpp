@@ -20,6 +20,9 @@ string deposit(BankState &bank_state, string depositor, int amount) {
 }
 
 string withdraw(BankState &bank_state, string withdrawer, int amount) {
+  if (amount <= 0)
+    return "Amount should be greater than zero";
+
   bank_state.balances[withdrawer] -= amount;
   return "";
 }
@@ -42,7 +45,7 @@ string buy_investment(BankState &bank_state, string buyer, int amount) {
 
   if (bank_state.balances[buyer] < amount) 
     return "Balance is too low";  
-    
+
   bank_state.balances[buyer] -= amount;
   bank_state.investments[bank_state.next_id] = {buyer, amount};
   bank_state.next_id++;
