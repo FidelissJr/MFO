@@ -115,7 +115,7 @@ bool are_equal(const BankState &state1, const BankState &state2) {
 }
 
 int main() {
-  for (int i = 0; i < 5000; i++) {
+  for (int i = 0; i < 10000; i++) {
     cout << "Trace #" << i << endl;
     std::ifstream f("traces/out" + to_string(i) + ".itf.json");
     json data = json::parse(f);
