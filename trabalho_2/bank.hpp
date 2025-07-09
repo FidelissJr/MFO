@@ -14,7 +14,7 @@ struct BankState {
 };
 
 string deposit(BankState &bank_state, string depositor, int amount) {
-   if (amount <= 0) return "Amount should be greater than zero";
+  if (amount <= 0) return "Amount should be greater than zero";
   bank_state.balances[depositor] += amount;
   return "";
 }
@@ -27,6 +27,9 @@ string withdraw(BankState &bank_state, string withdrawer, int amount) {
 string transfer(BankState &bank_state, string sender, string receiver, int amount) {
   if (bank_state.balances[sender] < amount)
     return "Balance is too low";
+  
+  if (amount <= 0)
+    return "Amount should be greater than zero";
 
   bank_state.balances[sender] -= amount;
   bank_state.balances[receiver] += amount;
@@ -36,7 +39,7 @@ string transfer(BankState &bank_state, string sender, string receiver, int amoun
 string buy_investment(BankState &bank_state, string buyer, int amount) {
   if (amount <= 0)
     return "Amount should be greater than zero";
-  
+
   bank_state.balances[buyer] -= amount;
   bank_state.investments[bank_state.next_id] = {buyer, amount};
   bank_state.next_id++;
